@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fotoğraf Yükleme Paneli</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            margin-top: 50px; 
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+        button { 
+            margin-top: 15px; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px;
+        }
+        button:hover { background: #218838; }
+        #status { margin-top: 20px; font-weight: bold; }
+        input[type="file"] { margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Fotoğraf Gönder</h2>
+        <p>Lütfen yüklemek istediğiniz fotoğrafı seçin.</p>
+        <input type="file" id="fileInput" accept="image/*">
+        <br>
+        <button onclick="uploadFile()">Drive'a Yükle</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const status = document.getElementById('status');
+
+            if (!file) {
+                status.innerText = "Lütfen önce bir fotoğraf seçin.";
+                status.style.color = "red";
+                return;
+            }
+
+            status.innerText = "Yükleniyor... Lütfen bekleyin.";
+            status.style.color = "#007bff";
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result.split(',')[1];
+                const data = {
+                    name: file.name,
+                    type: file.type,
+                    base64: base64Data
+                };
+
+                // KENDİ ALDIĞIN URL BURAYA EKLENDİ
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbzgV8bB40dNjzcJznif2Zci_IYxgNSyzAGyLhG76NmkwDGOG8I6B3DXjxBTXS8yxD1J/exec';
+
+                fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    mode: 'no-cors' 
+                })
+                .then(() => {
+                    status.innerText = "Harika! Fotoğraf başarıyla gönderildi.";
+                    status.style.color = "green";
+                    fileInput.value = ""; // Başarılı olunca seçili dosyayı temizle
+                })
+                .catch(error => {
+                    status.innerText = "Yükleme sırasında bir hata oluştu.";
+                    status.style.color = "red";
+                });
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
