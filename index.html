@@ -14,7 +14,6 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* ARKA PLAN FOTOĞRAFI */
             background-image: url('image_4.png'); 
             background-size: cover;
             background-position: center;
@@ -23,7 +22,7 @@
             position: relative;
         }
 
-        /* ANA KONTEYNER (Beyaz kutu kaldırıldı, tamamen şeffaf yapıldı) */
+        /* ANA KONTEYNER */
         .container {
             background-color: transparent; 
             padding: 40px;
@@ -33,22 +32,22 @@
             z-index: 2; 
         }
 
-        /* BAŞLIK VE METİNLER (Fotoğraf üzerinde okunabilmesi için gölge eklendi) */
+        /* BAŞLIK VE METİNLER */
         h2 {
-            color: #ff4d85; /* Daha parlak romantik pembe */
+            color: #ff4d85; 
             font-size: 34px;
             margin-bottom: 10px;
             font-weight: bold;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.8); /* Siyah gölge */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
         }
 
         p.welcome {
-            color: #ffffff; /* Yazı rengi beyaz yapıldı */
+            color: #ffffff; 
             font-size: 19px;
             margin-bottom: 30px;
             font-style: italic;
             font-weight: 500;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.9); /* Siyah gölge */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.9); 
         }
 
         /* ÖZEL DOSYA SEÇME BUTONU */
@@ -57,10 +56,10 @@
             border-radius: 10px;
             padding: 12px 20px;
             cursor: pointer;
-            color: #ffffff; /* Beyaz yazı */
+            color: #ffffff; 
             display: inline-block;
-            margin-bottom: 20px;
-            background-color: rgba(0, 0, 0, 0.5); /* Butonun arkası hafif koyu yapıldı */
+            margin-bottom: 10px; /* Boşluk biraz azaltıldı */
+            background-color: rgba(0, 0, 0, 0.5); 
             font-size: 16px;
             font-weight: bold;
             transition: all 0.3s ease;
@@ -72,9 +71,18 @@
             color: white;
         }
 
-        /* Varsayılan dosya inputunu gizliyoruz */
         input[type="file"] {
             display: none;
+        }
+
+        /* SEÇİLEN DOSYA SAYISI METNİ */
+        #fileCount {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+            display: none; /* Başlangıçta gizli */
         }
 
         /* UPLOAD BUTONU VE SAYAÇ */
@@ -96,7 +104,6 @@
             letter-spacing: 1px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
-            margin-top: 10px;
         }
 
         button#uploadBtn:hover { 
@@ -115,11 +122,10 @@
             font-weight: bold; 
             font-size: 17px; 
             min-height: 20px;
-            color: white; /* Mesajların okunması için beyaz yapıldı */
+            color: white; 
             text-shadow: 2px 2px 5px rgba(0,0,0,0.9);
         }
         
-        /* Mobil Cihazlar İçin Uyumluluk */
         @media (max-width: 600px) {
             h2 { font-size: 28px; }
             p.welcome { font-size: 17px; }
@@ -139,6 +145,9 @@
             </label>
             <input type="file" id="fileInput" accept="image/*" multiple>
             
+            <!-- Kaç fotoğraf seçildiğini gösterecek alan -->
+            <p id="fileCount"></p>
+            
             <button id="uploadBtn" onclick="uploadFiles()">Hemen Paylaş! ❤️</button>
         </div>
         
@@ -146,6 +155,17 @@
     </div>
 
     <script>
+        // DOSYA SEÇİLDİĞİNDE ÇALIŞACAK DİNLEYİCİ (YENİ EKLENDİ)
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const countDisplay = document.getElementById('fileCount');
+            if (this.files && this.files.length > 0) {
+                countDisplay.style.display = 'block';
+                countDisplay.innerText = `${this.files.length} fotoğraf seçildi 📸`;
+            } else {
+                countDisplay.style.display = 'none';
+            }
+        });
+
         function uploadSingleFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -199,6 +219,7 @@
             const files = fileInput.files;
             const status = document.getElementById('status');
             const btn = document.getElementById('uploadBtn');
+            const fileCountDisplay = document.getElementById('fileCount');
 
             if (files.length === 0) {
                 status.innerText = "Lütfen önce en az bir fotoğraf seçin.";
@@ -223,8 +244,9 @@
                 await Promise.all(uploadPromises);
 
                 status.innerText = `Harika! ${successCount} anı Drive'a paylaşıldı. ✨`;
-                status.style.color = "#00ff7f"; /* Açık yeşil renk */
+                status.style.color = "#00ff7f"; 
                 fileInput.value = ""; 
+                fileCountDisplay.style.display = 'none'; // Başarılı olunca sayaç yazısını gizle
             } catch (error) {
                 status.innerText = "Anılar paylaşılırken bir hata oluştu. Lütfen tekrar deneyin.";
                 status.style.color = "#ff4d85";
