@@ -3,46 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fotoğraf Yükleme Paneli</title>
+    <title>Aşk Anılarımız | Ortak Köşemiz</title>
     <style>
+        /* TÜM SAYFA AYARLARI */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; 
-            margin-top: 50px; 
-            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* ARKA PLAN FOTOĞRAFI: Sadece dosya adını yazdık */
+            background-image: url('image_4.png'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            position: relative;
         }
+
+        /* ARKA PLAN KARARTMA (Overlay) */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); /* Hafif karartma, metinlerin okunması için */
+            z-index: 1;
+        }
+
+        /* ANA KONTEYNER */
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-width: 400px;
-            margin: auto;
+            background-color: rgba(255, 255, 255, 0.95); /* Şeffaf beyaz */
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            z-index: 2; /* Arka plan karartmasının üstünde olması için */
+            transition: transform 0.3s ease;
         }
-        button { 
-            margin-top: 15px; 
-            padding: 10px 20px; 
+
+        .container:hover {
+            transform: translateY(-5px); /* Hafif yükselme efekti */
+        }
+
+        /* BAŞLIK VE METİNLER */
+        h2 {
+            color: #d63384; /* Romantik pembe */
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        p.welcome {
+            color: #555;
+            font-size: 18px;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        /* ÖZEL DOSYA SEÇME BUTONU */
+        .custom-file-upload {
+            border: 2px solid #d63384;
+            border-radius: 10px;
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #d63384;
+            display: inline-block;
+            margin-bottom: 20px;
+            background-color: transparent;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-file-upload:hover {
+            background-color: #d63384;
+            color: white;
+        }
+
+        /* Varsayılan dosya inputunu gizliyoruz */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* UPLOAD BUTONU VE SAYAÇ */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        button#uploadBtn { 
+            padding: 15px 30px; 
             cursor: pointer; 
-            background: #28a745; 
+            background: #d63384; /* Romantik pembe */
             color: white; 
             border: none; 
-            border-radius: 5px; 
-            font-size: 16px;
+            border-radius: 50px; /* Yuvarlak buton */
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(214, 51, 132, 0.4);
+            transition: all 0.3s ease;
+            margin-top: 10px;
         }
-        button:hover { background: #218838; }
-        button:disabled { background: #6c757d; cursor: not-allowed; }
-        #status { margin-top: 20px; font-weight: bold; }
-        input[type="file"] { margin-top: 10px; }
+
+        button#uploadBtn:hover { 
+            background: #b52a6e; 
+            box-shadow: 0 8px 20px rgba(214, 51, 132, 0.5);
+            transform: scale(1.03); /* Hafif büyüme */
+        }
+
+        button#uploadBtn:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+            box-shadow: none;
+        }
+
+        #status { margin-top: 25px; font-weight: bold; font-size: 16px; min-height: 20px; }
+        
+        /* Mobil Cihazlar İçin Uyumluluk */
+        @media (max-width: 600px) {
+            h2 { font-size: 26px; }
+            p.welcome { font-size: 16px; }
+            .container { padding: 30px; }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Fotoğrafları Gönder4</h2>
-        <p>Lütfen yüklemek istediğiniz fotoğrafları seçin.</p>
-        <input type="file" id="fileInput" accept="image/*" multiple>
-        <br>
-        <button id="uploadBtn" onclick="uploadFiles()">Drive'a Yükle</button>
+        <h2>Aşk Anılarımız</h2>
+        <p class="welcome">Her an değerli, her an bizim... En sevdiğimiz fotoğrafları buradan ekleyebiliriz.</p>
+        
+        <div class="btn-group">
+            <!-- Özel dosya seçme etiketi -->
+            <label for="fileInput" class="custom-file-upload">
+                <i class="fa fa-cloud-upload"></i> Fotoğraf Seç
+            </label>
+            <!-- Varsayılan dosya inputunu gizledik -->
+            <input type="file" id="fileInput" accept="image/*" multiple>
+            
+            <button id="uploadBtn" onclick="uploadFiles()">Hemen Paylaş! ❤️</button>
+        </div>
+        
         <p id="status"></p>
     </div>
 
@@ -55,7 +164,6 @@
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         
-                        // YÜKSEK KALİTE: Genişlik Full HD (1920px) ile sınırlandırıldı
                         const MAX_WIDTH = 1920;
                         let width = img.width;
                         let height = img.height;
@@ -71,7 +179,6 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        // YÜKSEK KALİTE: JPEG kalitesi %95'e çekildi (0.95)
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                         const base64Data = dataUrl.split(',')[1];
 
@@ -81,6 +188,7 @@
                             base64: base64Data
                         };
 
+                        // KENDİ URL'N
                         const scriptURL = 'https://script.google.com/macros/s/AKfycbzgV8bB40dNjzcJznif2Zci_IYxgNSyzAGyLhG76NmkwDGOG8I6B3DXjxBTXS8yxD1J/exec';
 
                         fetch(scriptURL, {
@@ -104,7 +212,7 @@
             const btn = document.getElementById('uploadBtn');
 
             if (files.length === 0) {
-                status.innerText = "Lütfen en az bir fotoğraf seçin.";
+                status.innerText = "Lütfen önce en az bir fotoğraf seçin.";
                 status.style.color = "red";
                 return;
             }
@@ -113,25 +221,25 @@
             status.style.color = "#007bff";
             
             let successCount = 0;
-            status.innerText = `Yükleniyor... (0/${files.length})`;
+            status.innerText = `Anılar paylaşılıyor... (0/${files.length})`;
 
             try {
                 // Asenkron (Paralel) yükleme yapısı korundu
                 const uploadPromises = Array.from(files).map(file => {
                     return uploadSingleFile(file).then(() => {
                         successCount++;
-                        status.innerText = `Yükleniyor... (${successCount}/${files.length})`;
+                        status.innerText = `Anılar paylaşılıyor... (${successCount}/${files.length})`;
                     });
                 });
 
                 // Tüm dosyaları aynı anda ağa gönderir
                 await Promise.all(uploadPromises);
 
-                status.innerText = `Harika! ${successCount} fotoğraf yüksek kaliteyle Drive'a gönderildi.`;
+                status.innerText = `Harika! ${successCount} anı yüksek kaliteyle Drive'a paylaşıldı. ✨`;
                 status.style.color = "green";
                 fileInput.value = ""; 
             } catch (error) {
-                status.innerText = "Yükleme sırasında bir hata oluştu. Lütfen tekrar deneyin.";
+                status.innerText = "Anılar paylaşılırken bir hata oluştu. Lütfen tekrar deneyin.";
                 status.style.color = "red";
             } finally {
                 btn.disabled = false;
