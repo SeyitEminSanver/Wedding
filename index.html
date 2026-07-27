@@ -14,7 +14,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            /* ARKA PLAN FOTOĞRAFI: Sadece dosya adını yazdık */
+            /* ARKA PLAN FOTOĞRAFI */
             background-image: url('image_4.png'); 
             background-size: cover;
             background-position: center;
@@ -23,66 +23,52 @@
             position: relative;
         }
 
-        /* ARKA PLAN KARARTMA (Overlay) */
-        body::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.4); /* Hafif karartma, metinlerin okunması için */
-            z-index: 1;
-        }
-
-        /* ANA KONTEYNER */
+        /* ANA KONTEYNER (Beyaz kutu kaldırıldı, tamamen şeffaf yapıldı) */
         .container {
-            background-color: rgba(255, 255, 255, 0.95); /* Şeffaf beyaz */
+            background-color: transparent; 
             padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             max-width: 450px;
             width: 90%;
             text-align: center;
-            z-index: 2; /* Arka plan karartmasının üstünde olması için */
-            transition: transform 0.3s ease;
+            z-index: 2; 
         }
 
-        .container:hover {
-            transform: translateY(-5px); /* Hafif yükselme efekti */
-        }
-
-        /* BAŞLIK VE METİNLER */
+        /* BAŞLIK VE METİNLER (Fotoğraf üzerinde okunabilmesi için gölge eklendi) */
         h2 {
-            color: #d63384; /* Romantik pembe */
-            font-size: 32px;
+            color: #ff4d85; /* Daha parlak romantik pembe */
+            font-size: 34px;
             margin-bottom: 10px;
             font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8); /* Siyah gölge */
         }
 
         p.welcome {
-            color: #555;
-            font-size: 18px;
+            color: #ffffff; /* Yazı rengi beyaz yapıldı */
+            font-size: 19px;
             margin-bottom: 30px;
             font-style: italic;
+            font-weight: 500;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.9); /* Siyah gölge */
         }
 
         /* ÖZEL DOSYA SEÇME BUTONU */
         .custom-file-upload {
-            border: 2px solid #d63384;
+            border: 2px solid #ff4d85;
             border-radius: 10px;
             padding: 12px 20px;
             cursor: pointer;
-            color: #d63384;
+            color: #ffffff; /* Beyaz yazı */
             display: inline-block;
             margin-bottom: 20px;
-            background-color: transparent;
+            background-color: rgba(0, 0, 0, 0.5); /* Butonun arkası hafif koyu yapıldı */
             font-size: 16px;
+            font-weight: bold;
             transition: all 0.3s ease;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
         }
 
         .custom-file-upload:hover {
-            background-color: #d63384;
+            background-color: #ff4d85;
             color: white;
         }
 
@@ -101,22 +87,21 @@
         button#uploadBtn { 
             padding: 15px 30px; 
             cursor: pointer; 
-            background: #d63384; /* Romantik pembe */
+            background: #ff4d85; 
             color: white; 
             border: none; 
-            border-radius: 50px; /* Yuvarlak buton */
+            border-radius: 50px; 
             font-size: 18px;
             font-weight: bold;
             letter-spacing: 1px;
-            box-shadow: 0 5px 15px rgba(214, 51, 132, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
             margin-top: 10px;
         }
 
         button#uploadBtn:hover { 
-            background: #b52a6e; 
-            box-shadow: 0 8px 20px rgba(214, 51, 132, 0.5);
-            transform: scale(1.03); /* Hafif büyüme */
+            background: #d63384; 
+            transform: scale(1.05); 
         }
 
         button#uploadBtn:disabled { 
@@ -125,13 +110,20 @@
             box-shadow: none;
         }
 
-        #status { margin-top: 25px; font-weight: bold; font-size: 16px; min-height: 20px; }
+        #status { 
+            margin-top: 25px; 
+            font-weight: bold; 
+            font-size: 17px; 
+            min-height: 20px;
+            color: white; /* Mesajların okunması için beyaz yapıldı */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.9);
+        }
         
         /* Mobil Cihazlar İçin Uyumluluk */
         @media (max-width: 600px) {
-            h2 { font-size: 26px; }
-            p.welcome { font-size: 16px; }
-            .container { padding: 30px; }
+            h2 { font-size: 28px; }
+            p.welcome { font-size: 17px; }
+            .container { padding: 20px; }
         }
     </style>
 </head>
@@ -142,11 +134,9 @@
         <p class="welcome">Her an değerli, her an bizim... En sevdiğimiz fotoğrafları buradan ekleyebiliriz.</p>
         
         <div class="btn-group">
-            <!-- Özel dosya seçme etiketi -->
             <label for="fileInput" class="custom-file-upload">
-                <i class="fa fa-cloud-upload"></i> Fotoğraf Seç
+                Fotoğraf Seç
             </label>
-            <!-- Varsayılan dosya inputunu gizledik -->
             <input type="file" id="fileInput" accept="image/*" multiple>
             
             <button id="uploadBtn" onclick="uploadFiles()">Hemen Paylaş! ❤️</button>
@@ -188,7 +178,6 @@
                             base64: base64Data
                         };
 
-                        // KENDİ URL'N
                         const scriptURL = 'https://script.google.com/macros/s/AKfycbzgV8bB40dNjzcJznif2Zci_IYxgNSyzAGyLhG76NmkwDGOG8I6B3DXjxBTXS8yxD1J/exec';
 
                         fetch(scriptURL, {
@@ -213,18 +202,17 @@
 
             if (files.length === 0) {
                 status.innerText = "Lütfen önce en az bir fotoğraf seçin.";
-                status.style.color = "red";
+                status.style.color = "#ff4d85";
                 return;
             }
 
             btn.disabled = true;
-            status.style.color = "#007bff";
+            status.style.color = "#ffffff";
             
             let successCount = 0;
             status.innerText = `Anılar paylaşılıyor... (0/${files.length})`;
 
             try {
-                // Asenkron (Paralel) yükleme yapısı korundu
                 const uploadPromises = Array.from(files).map(file => {
                     return uploadSingleFile(file).then(() => {
                         successCount++;
@@ -232,15 +220,14 @@
                     });
                 });
 
-                // Tüm dosyaları aynı anda ağa gönderir
                 await Promise.all(uploadPromises);
 
-                status.innerText = `Harika! ${successCount} anı yüksek kaliteyle Drive'a paylaşıldı. ✨`;
-                status.style.color = "green";
+                status.innerText = `Harika! ${successCount} anı Drive'a paylaşıldı. ✨`;
+                status.style.color = "#00ff7f"; /* Açık yeşil renk */
                 fileInput.value = ""; 
             } catch (error) {
                 status.innerText = "Anılar paylaşılırken bir hata oluştu. Lütfen tekrar deneyin.";
-                status.style.color = "red";
+                status.style.color = "#ff4d85";
             } finally {
                 btn.disabled = false;
             }
