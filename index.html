@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aşk Anılarımız | Ortak Köşemiz</title>
@@ -59,7 +58,7 @@
             cursor: pointer;
             color: #ffffff; 
             display: inline-block;
-            margin-bottom: 10px; /* Boşluk biraz azaltıldı */
+            margin-bottom: 10px;
             background-color: rgba(0, 0, 0, 0.5); 
             font-size: 16px;
             font-weight: bold;
@@ -83,7 +82,7 @@
             font-weight: bold;
             margin: 0 0 15px 0;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
-            display: none; /* Başlangıçta gizli */
+            display: none;
         }
 
         /* UPLOAD BUTONU VE SAYAÇ */
@@ -144,9 +143,9 @@
             <label for="fileInput" class="custom-file-upload">
                 Fotoğraf Seç
             </label>
+            <!-- HEIC ve HEIF uzantı izinleri eklendi -->
             <input type="file" id="fileInput" accept="image/*,.heic,.heif,image/heic,image/heif" multiple>
             
-            <!-- Kaç fotoğraf seçildiğini gösterecek alan -->
             <p id="fileCount"></p>
             
             <button id="uploadBtn" onclick="uploadFiles()">Hemen Paylaş! ❤️</button>
@@ -156,7 +155,8 @@
     </div>
 
     <script>
-        // DOSYA SEÇİLDİĞİNDE ÇALIŞACAK DİNLEYİCİ (YENİ EKLENDİ)
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzgV8bB40dNjzcJznif2Zci_IYxgNSyzAGyLhG76NmkwDGOG8I6B3DXjxBTXS8yxD1J/exec';
+
         document.getElementById('fileInput').addEventListener('change', function() {
             const countDisplay = document.getElementById('fileCount');
             if (this.files && this.files.length > 0) {
@@ -167,70 +167,75 @@
             }
         });
 
-async function uploadSingleFile(file) {
-    let fileToProcess = file;
-
-    // Uzantı kontrolü
-    const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
-
-    if (isHeic) {
-        try {
-            // HEIC dosyasını JPEG blob'a dönüştürür
-            const convertedBlob = await heic2any({
-                blob: file,
-                toType: "image/jpeg",
-                quality: 0.8
+        function sendData(data) {
+            return fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                mode: 'no-cors'
             });
-            
-            // Tekil blob kontrolü
-            const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-            fileToProcess = new File([blob], file.name.replace(/\.(heic|HEIC|heif|HEIF)$/, ".jpg"), {
-                type: "image/jpeg"
-            });
-        } catch (e) {
-            console.error("HEIC dönüşüm hatası:", e);
         }
-    }
 
-    // Geri kalan mevcut FileReader + Canvas kodlarınız fileToProcess ile aynen çalışır...
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 1920;
-                let width = img.width;
-                let height = img.height;
+        function uploadSingleFile(file) {
+            return new Promise((resolve, reject) => {
+                const fileNameLower = file.name.toLowerCase();
+                const isHeic = fileNameLower.endsWith('.heic') || fileNameLower.endsWith('.heif') || file.type.includes('heic') || file.type.includes('heif');
 
-                if (width > MAX_WIDTH) {
-                    height = Math.round((height * MAX_WIDTH) / width);
-                    width = MAX_WIDTH;
+                // HEIC/HEIF ise Canvas'a sokmadan direkt oku ve gönder
+                if (isHeic) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const base64Data = event.target.result.split(',')[1];
+                        const data = {
+                            name: file.name,
+                            type: file.type || 'image/heic',
+                            base64: base64Data
+                        };
+                        sendData(data).then(resolve).catch(reject);
+                    };
+                    reader.onerror = (err) => reject(err);
+                    reader.readAsDataURL(file);
+                    return;
                 }
 
-                canvas.width = width;
-                canvas.height = height;
+                // Normal resimler (JPG, PNG vs.) için canvas sıkıştırması
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1920;
+                        let width = img.width;
+                        let height = img.height;
 
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                const base64Data = dataUrl.split(',')[1];
+                        canvas.width = width;
+                        canvas.height = height;
 
-                const data = {
-                    name: fileToProcess.name,
-                    type: 'image/jpeg',
-                    base64: base64Data
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                        const base64Data = dataUrl.split(',')[1];
+
+                        const data = {
+                            name: file.name,
+                            type: 'image/jpeg',
+                            base64: base64Data
+                        };
+
+                        sendData(data).then(resolve).catch(reject);
+                    };
+                    img.onerror = (err) => reject(err);
+                    img.src = event.target.result;
                 };
-
-                sendToGoogleScript(data).then(resolve).catch(reject);
-            };
-            img.onerror = (err) => reject(err);
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(fileToProcess);
-    });
-}
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
 
         async function uploadFiles() {
             const fileInput = document.getElementById('fileInput');
@@ -264,7 +269,7 @@ async function uploadSingleFile(file) {
                 status.innerText = `Harika! ${successCount} Harika anı SEYİT ve ÖZLEM için Drive'a paylaşıldı. ✨`;
                 status.style.color = "#00ff7f"; 
                 fileInput.value = ""; 
-                fileCountDisplay.style.display = 'none'; // Başarılı olunca sayaç yazısını gizle
+                fileCountDisplay.style.display = 'none';
             } catch (error) {
                 status.innerText = "Anılar paylaşılırken bir hata oluştu. Lütfen tekrar deneyin.";
                 status.style.color = "#ff4d85";
