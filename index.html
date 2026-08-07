@@ -1,69 +1,282 @@
-function uploadSingleFile(file) {
-    return new Promise((resolve, reject) => {
-        const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type.includes('heic') || file.type.includes('heif');
-
-        // YÖNTEM A: Eğer dosya HEIC ise Canvas dönüştürmesini pas geç, doğrudan oku ve gönder.
-        if (isHeic) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const base64Data = event.target.result.split(',')[1];
-                const data = {
-                    name: file.name,
-                    type: file.type || 'image/heic',
-                    base64: base64Data
-                };
-                sendToGoogleScript(data).then(resolve).catch(reject);
-            };
-            reader.onerror = (err) => reject(err);
-            reader.readAsDataURL(file);
-            return;
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aşk Anılarımız | Ortak Köşemiz</title>
+    <style>
+        /* TÜM SAYFA AYARLARI */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('image_4.png'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            position: relative;
         }
 
-        // YÖNTEM B: Diğer standart resimler (JPG, PNG vb.) için mevcut Canvas sıkıştırmanız devam eder.
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 1920;
-                let width = img.width;
-                let height = img.height;
+        /* ANA KONTEYNER */
+        .container {
+            background-color: transparent; 
+            padding: 40px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            z-index: 2; 
+        }
 
-                if (width > MAX_WIDTH) {
-                    height = Math.round((height * MAX_WIDTH) / width);
-                    width = MAX_WIDTH;
+        /* BAŞLIK VE METİNLER */
+        h2 {
+            color: #ff4d85; 
+            font-size: 34px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+        }
+
+        p.welcome {
+            color: #ffffff; 
+            font-size: 19px;
+            margin-bottom: 30px;
+            font-style: italic;
+            font-weight: 500;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.9); 
+        }
+
+        /* ÖZEL DOSYA SEÇME BUTONU */
+        .custom-file-upload {
+            border: 2px solid #ff4d85;
+            border-radius: 10px;
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #ffffff; 
+            display: inline-block;
+            margin-bottom: 10px;
+            background-color: rgba(0, 0, 0, 0.5); 
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .custom-file-upload:hover {
+            background-color: #ff4d85;
+            color: white;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* SEÇİLEN DOSYA SAYISI METNİ */
+        #fileCount {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+            display: none;
+        }
+
+        /* UPLOAD BUTONU VE SAYAÇ */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        button#uploadBtn { 
+            padding: 15px 30px; 
+            cursor: pointer; 
+            background: #ff4d85; 
+            color: white; 
+            border: none; 
+            border-radius: 50px; 
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        button#uploadBtn:hover { 
+            background: #d63384; 
+            transform: scale(1.05); 
+        }
+
+        button#uploadBtn:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+            box-shadow: none;
+        }
+
+        #status { 
+            margin-top: 25px; 
+            font-weight: bold; 
+            font-size: 17px; 
+            min-height: 20px;
+            color: white; 
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.9);
+        }
+        
+        @media (max-width: 600px) {
+            h2 { font-size: 28px; }
+            p.welcome { font-size: 17px; }
+            .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>ÖZLEM & SEYİT AŞK Anılarımız</h2>
+        <p class="welcome">Seyit & Özlem... Birlikte yazdığımız bu güzel hikayenin en özel karelerini burada biriktiriyoruz. Aşkımızla sonsuzlaşan her anımıza...</p>
+        
+        <div class="btn-group">
+            <label for="fileInput" class="custom-file-upload">
+                Fotoğraf Seç
+            </label>
+            <!-- HEIC ve HEIF uzantı izinleri eklendi -->
+            <input type="file" id="fileInput" accept="image/*,.heic,.heif,image/heic,image/heif" multiple>
+            
+            <p id="fileCount"></p>
+            
+            <button id="uploadBtn" onclick="uploadFiles()">Hemen Paylaş! ❤️</button>
+        </div>
+        
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzgV8bB40dNjzcJznif2Zci_IYxgNSyzAGyLhG76NmkwDGOG8I6B3DXjxBTXS8yxD1J/exec';
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const countDisplay = document.getElementById('fileCount');
+            if (this.files && this.files.length > 0) {
+                countDisplay.style.display = 'block';
+                countDisplay.innerText = `${this.files.length} fotoğraf seçildi 📸`;
+            } else {
+                countDisplay.style.display = 'none';
+            }
+        });
+
+        function sendData(data) {
+            return fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                mode: 'no-cors'
+            });
+        }
+
+        function uploadSingleFile(file) {
+            return new Promise((resolve, reject) => {
+                const fileNameLower = file.name.toLowerCase();
+                const isHeic = fileNameLower.endsWith('.heic') || fileNameLower.endsWith('.heif') || file.type.includes('heic') || file.type.includes('heif');
+
+                // HEIC/HEIF ise Canvas'a sokmadan direkt oku ve gönder
+                if (isHeic) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const base64Data = event.target.result.split(',')[1];
+                        const data = {
+                            name: file.name,
+                            type: file.type || 'image/heic',
+                            base64: base64Data
+                        };
+                        sendData(data).then(resolve).catch(reject);
+                    };
+                    reader.onerror = (err) => reject(err);
+                    reader.readAsDataURL(file);
+                    return;
                 }
 
-                canvas.width = width;
-                canvas.height = height;
+                // Normal resimler (JPG, PNG vs.) için canvas sıkıştırması
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1920;
+                        let width = img.width;
+                        let height = img.height;
 
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
+                        if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                        }
 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                const base64Data = dataUrl.split(',')[1];
+                        canvas.width = width;
+                        canvas.height = height;
 
-                const data = {
-                    name: file.name,
-                    type: 'image/jpeg',
-                    base64: base64Data
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                        const base64Data = dataUrl.split(',')[1];
+
+                        const data = {
+                            name: file.name,
+                            type: 'image/jpeg',
+                            base64: base64Data
+                        };
+
+                        sendData(data).then(resolve).catch(reject);
+                    };
+                    img.onerror = (err) => reject(err);
+                    img.src = event.target.result;
                 };
+                reader.onerror = (err) => reject(err);
+                reader.readAsDataURL(file);
+            });
+        }
 
-                sendToGoogleScript(data).then(resolve).catch(reject);
-            };
-            img.onerror = (err) => reject(err);
-            img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-}
+        async function uploadFiles() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            const status = document.getElementById('status');
+            const btn = document.getElementById('uploadBtn');
+            const fileCountDisplay = document.getElementById('fileCount');
 
-// Fetch işlemini tekrar eden kodlardan kaçınmak için ayrı bir yardımcı fonksiyon:
-function sendToGoogleScript(data) {
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzgV8bB40dNjzcJznif2Zci_IYxgNSyzAGyLhG76NmkwDGOG8I6B3DXjxBTXS8yxD1J/exec';
-    return fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        mode: 'no-cors'
-    });
-}
+            if (files.length === 0) {
+                status.innerText = "Lütfen önce en az bir fotoğraf seçin.";
+                status.style.color = "#ff4d85";
+                return;
+            }
+
+            btn.disabled = true;
+            status.style.color = "#ffffff";
+            
+            let successCount = 0;
+            status.innerText = `Anılar paylaşılıyor... (0/${files.length})`;
+
+            try {
+                const uploadPromises = Array.from(files).map(file => {
+                    return uploadSingleFile(file).then(() => {
+                        successCount++;
+                        status.innerText = `Anılar paylaşılıyor... (${successCount}/${files.length})`;
+                    });
+                });
+
+                await Promise.all(uploadPromises);
+
+                status.innerText = `Harika! ${successCount} Harika anı SEYİT ve ÖZLEM için Drive'a paylaşıldı. ✨`;
+                status.style.color = "#00ff7f"; 
+                fileInput.value = ""; 
+                fileCountDisplay.style.display = 'none';
+            } catch (error) {
+                status.innerText = "Anılar paylaşılırken bir hata oluştu. Lütfen tekrar deneyin.";
+                status.style.color = "#ff4d85";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
