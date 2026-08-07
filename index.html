@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aşk Anılarımız | Ortak Köşemiz</title>
@@ -166,53 +167,70 @@
             }
         });
 
-        function uploadSingleFile(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        
-                        const MAX_WIDTH = 1920;
-                        let width = img.width;
-                        let height = img.height;
+async function uploadSingleFile(file) {
+    let fileToProcess = file;
 
-                        if (width > MAX_WIDTH) {
-                            height = Math.round((height * MAX_WIDTH) / width);
-                            width = MAX_WIDTH;
-                        }
+    // Uzantı kontrolü
+    const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
 
-                        canvas.width = width;
-                        canvas.height = height;
-
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-                        const base64Data = dataUrl.split(',')[1];
-
-                        const data = {
-                            name: file.name,
-                            type: 'image/jpeg',
-                            base64: base64Data
-                        };
-
-                        const scriptURL = 'https://script.google.com/macros/s/AKfycbzgV8bB40dNjzcJznif2Zci_IYxgNSyzAGyLhG76NmkwDGOG8I6B3DXjxBTXS8yxD1J/exec';
-
-                        fetch(scriptURL, {
-                            method: 'POST',
-                            body: JSON.stringify(data),
-                            mode: 'no-cors' 
-                        })
-                        .then(() => resolve())
-                        .catch((err) => reject(err));
-                    };
-                    img.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
+    if (isHeic) {
+        try {
+            // HEIC dosyasını JPEG blob'a dönüştürür
+            const convertedBlob = await heic2any({
+                blob: file,
+                toType: "image/jpeg",
+                quality: 0.8
             });
+            
+            // Tekil blob kontrolü
+            const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+            fileToProcess = new File([blob], file.name.replace(/\.(heic|HEIC|heif|HEIF)$/, ".jpg"), {
+                type: "image/jpeg"
+            });
+        } catch (e) {
+            console.error("HEIC dönüşüm hatası:", e);
         }
+    }
+
+    // Geri kalan mevcut FileReader + Canvas kodlarınız fileToProcess ile aynen çalışır...
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1920;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height = Math.round((height * MAX_WIDTH) / width);
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                const base64Data = dataUrl.split(',')[1];
+
+                const data = {
+                    name: fileToProcess.name,
+                    type: 'image/jpeg',
+                    base64: base64Data
+                };
+
+                sendToGoogleScript(data).then(resolve).catch(reject);
+            };
+            img.onerror = (err) => reject(err);
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(fileToProcess);
+    });
+}
 
         async function uploadFiles() {
             const fileInput = document.getElementById('fileInput');
